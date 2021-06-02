@@ -1,8 +1,7 @@
-
-
 d3.csv("2018_worldcup_v3.csv", function (data) {
     // refereesPieChart(data);
-    matchesPieChart(data);
+    // matchesPieChart(data);
+    attendanceHistogram(data);
 });
 
 function refereesPieChart(data) {
@@ -112,7 +111,7 @@ function matchesPieChart(data) {
         d3.select("#dropdown-content").append("a").attr("href", "#").text(teams[i].name);
     }
 
-    var team = teams[7];
+    var team = teams[0];
 
     d3.select("body")
         .append("div")
@@ -173,6 +172,89 @@ function matchesPieChart(data) {
 
 
     console.log(teams);
+}
+
+function attendanceHistogram(data) {
+    var stadiums = [];
+
+    for (let i = 0; i < data.length; i++) {
+        let stadiumAttendance = Math.round(data[i].Attendance / 1000);
+
+        if (!stadiums.some(stadium => stadium.name === data[i].Stadium)) {
+            stadiums.push({ name: (data[i].Stadium), attendance: stadiumAttendance });
+        } else {
+            let stadiumIndex = stadiums.findIndex((stadium => stadium.name == data[i].Stadium));
+            stadiums[stadiumIndex].attendance += stadiumAttendance;
+        }
+    }
+
+    console.log(stadiums);
+
+    const titleText = 'Attendance per stadium';
+    const xAxisLabelText = 'Attendance';
+
+    const svg = d3.select('svg');
+
+    const width = 960;
+    const height = 500;
+
+    const render = data => {
+        const xValue = d => d['attendance'];
+        const yValue = d => d.stadium;
+        const margin = { top: 50, right: 40, bottom: 77, left: 180 };
+        const innerWidth = width - margin.left - margin.right;
+        const innerHeight = height - margin.top - margin.bottom;
+
+        const xScale = d3.scaleLinear()
+            .domain([0, d3.max(data, xValue)])
+            .range([0, innerWidth]);
+
+        const yScale = d3.scaleBand()
+            .domain(data.map(yValue))
+            .range([0, innerHeight])
+            .padding(0.1);
+
+        const g = svg.append('g')
+            .attr('transform', `translate(${margin.left},${margin.top})`);
+
+        const xAxisTickFormat = number =>
+            d3.format('.3s')(number)
+                .replace('G', 'B');
+
+        const xAxis = d3.axisBottom(xScale)
+            .tickFormat(xAxisTickFormat)
+            .tickSize(-innerHeight);
+
+        g.append('g')
+            .call(d3.axisLeft(yScale))
+            .selectAll('.domain, .tick line')
+            .remove();
+
+        const xAxisG = g.append('g').call(xAxis)
+            .attr('transform', `translate(0,${innerHeight})`);
+
+        xAxisG.select('.domain').remove();
+
+        xAxisG.append('text')
+            .attr('class', 'axis-label')
+            .attr('y', 65)
+            .attr('x', innerWidth / 2)
+            .attr('fill', 'black')
+            .text(xAxisLabelText);
+
+        g.selectAll('rect').data(data)
+            .enter().append('rect')
+            .attr('y', d => yScale(yValue(d)))
+            .attr('width', d => xScale(xValue(d)))
+            .attr('height', yScale.bandwidth());
+
+        g.append('text')
+            .attr('class', 'title')
+            .attr('y', -10)
+            .text(titleText);
+    };
+
+    render(stadiums);
 }
 
 // d3.select("#dropdown-content").append("a").attr("href", "#").text(data[i].Referee);

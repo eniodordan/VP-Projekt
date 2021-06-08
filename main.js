@@ -1,7 +1,7 @@
 d3.csv("2018_worldcup_v3.csv", function (data) {
     // refereesPieChart(data);
-    // matchesPieChart(data);
-    attendanceHistogram(data);
+    matchesPieChart(data);
+    // attendanceHistogram(data);
 });
 
 function refereesPieChart(data) {
@@ -126,14 +126,15 @@ function matchesPieChart(data) {
     var outerRadius = 200;
     var innerRadius = 50;
 
-    var color = d3.scale.category20();
+    var color = d3.scaleOrdinal().range(["#98abc5", "#8a89a6", "#7b6888"]);
 
-    var arc = d3.svg.arc()
+    var arc = d3.arc()
         .outerRadius(outerRadius);
 
-    var pie = d3.layout.pie()
+    var pie = d3.pie()
         .value(function (d) { return d.value; })
     var data_ready = pie(d3.entries(team))
+
 
     var svg = d3.select("body")
         .append("svg")
@@ -148,8 +149,8 @@ function matchesPieChart(data) {
         .attr("transform", "translate(" + (width / 2) + ", " + (height / 2) + ")");
 
     pieArcs.append("path")
-        .attr("fill", function (d, i) { return color(i); })
-        .attr("d", arc);
+        .attr("d", arc)
+        .attr("fill", function (d) { return color(d.value); });
 
     pieArcs.append("text")
         .attr("transform", function (d) {
@@ -178,7 +179,7 @@ function attendanceHistogram(data) {
     var stadiums = [];
 
     for (let i = 0; i < data.length; i++) {
-        let stadiumAttendance = Math.round(data[i].Attendance / 1000);
+        let stadiumAttendance = Math.round(data[i].Attendance);
 
         if (!stadiums.some(stadium => stadium.name === data[i].Stadium)) {
             stadiums.push({ name: (data[i].Stadium), attendance: stadiumAttendance });
@@ -188,9 +189,57 @@ function attendanceHistogram(data) {
         }
     }
 
-    console.log(stadiums);
-
     const titleText = 'Attendance per stadium';
+    const xAxisLabelText = 'Attendance';
+
+    const svg = d3.select('svg');
+    const width = +svg.attr('width');
+    const height = +svg.attr('height');
+
+    const xValue = stadium => stadium.attendance;
+    const yValue = stadium => stadium.name;
+    const margin = { top: 50, right: 40, bottom: 77, left: 180 };
+    const innerWidth = width - margin.left - margin.right;
+    const innerHeight = height - margin.top - margin.bottom;
+
+    const xScale = d3.scaleLinear()
+        .domain([0, d3.max(stadiums, xValue)])
+        .range([0, innerWidth]);
+
+    const yScale = d3.scaleBand()
+        .domain(stadiums.map(yValue))
+        .range([0, innerHeight])
+        .padding(0.1);
+
+    const g = svg.append('g')
+        .attr('transform', `translate(${margin.left}, ${margin.top})`);
+
+    g.append('g').call(d3.axisLeft(yScale)).selectAll('.domain, .tick line').remove();
+
+    const xAxisG = g.append('g').call(d3.axisBottom(xScale).tickSize(-innerHeight))
+        .attr('transform', `translate(0, ${innerHeight})`);
+
+    xAxisG.select('.domain').remove();
+
+    xAxisG.append('text')
+        .attr('class', 'axis-label')
+        .attr('y', 65)
+        .attr('x', innerWidth / 2)
+        .attr('fill', 'black')
+        .text(xAxisLabelText);
+
+    g.selectAll('rect').data(stadiums)
+        .enter().append('rect')
+            .attr('y', stadium => yScale(yValue(stadium)))
+            .attr('width', stadium => xScale(xValue(stadium)))
+            .attr('height', yScale.bandwidth());
+    
+    g.append('text')
+        .attr('class', 'title')
+        .attr('y', -10)
+        .text(titleText);
+
+    /*const titleText = 'Attendance per stadium';
     const xAxisLabelText = 'Attendance';
 
     const svg = d3.select('svg');
@@ -254,7 +303,7 @@ function attendanceHistogram(data) {
             .text(titleText);
     };
 
-    render(stadiums);
+    render(stadiums);*/
 }
 
 // d3.select("#dropdown-content").append("a").attr("href", "#").text(data[i].Referee);

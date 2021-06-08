@@ -1,8 +1,11 @@
 d3.csv("2018_worldcup_v3.csv", function (data) {
-    // refereesPieChart(data);
-    matchesPieChart(data);
-    // attendanceHistogram(data);
+    tournamentBracket(data);
+    //refereesPieChart(data);
+    //matchesPieChart(data);
+    //attendanceHistogram(data);
 });
+
+function tournamentBracket(data) { }
 
 function refereesPieChart(data) {
     var referees = {};
@@ -22,7 +25,52 @@ function refereesPieChart(data) {
 
     referees['Ostali'] = otherRefereesCount;
 
-    var width = 500;
+    var width = 450
+    height = 450
+    margin = 40
+    var radius = Math.min(width, height) / 2 - margin
+
+    var svg = d3.select("#matchesPieChart")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .append("g")
+        .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+    var color = d3.scaleOrdinal()
+        .domain(referees)
+        .range(d3.schemeSet2);
+
+    var pie = d3.pie()
+        .value(function (d) { return d.value; })
+    var data_ready = pie(d3.entries(referees))
+
+    var arcGenerator = d3.arc()
+        .innerRadius(0)
+        .outerRadius(radius)
+
+    svg
+        .selectAll('mySlices')
+        .data(data_ready)
+        .enter()
+        .append('path')
+        .attr('d', arcGenerator)
+        .attr('fill', function (d) { return (color(d.data.key)) })
+        .attr("stroke", "black")
+        .style("stroke-width", "2px")
+        .style("opacity", 0.7)
+
+    svg
+        .selectAll('mySlices')
+        .data(data_ready)
+        .enter()
+        .append('text')
+        .text(function (d) { return d.data.key + ": " + d.data.value })
+        .attr("transform", function (d) { return "translate(" + arcGenerator.centroid(d) + ")"; })
+        .style("text-anchor", "middle")
+        .style("font-size", 17)
+
+    /* var width = 500;
     var height = 500;
     var outerRadius = 200;
     var innerRadius = 50;
@@ -68,7 +116,7 @@ function refereesPieChart(data) {
             return "translate(" + arc.centroid(d) + ")";
         })
         .attr("text-anchor", "middle")
-        .text(function (d, i) { return Object.keys(referees)[i]; });
+        .text(function (d, i) { return Object.keys(referees)[i]; }); */
 }
 
 function matchesPieChart(data) {
@@ -107,72 +155,106 @@ function matchesPieChart(data) {
         }
     }
 
-    for (let i = 0; i < teams.length; i++) {
-        d3.select("#dropdown-content").append("a").attr("href", "#").text(teams[i].name);
+    teams.forEach(
+        function (element) {
+            for (key in element) {
+                if (element[key] === 0) {
+                    delete element[key];
+                }
+            }
+        }
+
+    );
+
+    function generateTableHead(table, data) {
+        let thead = table.createTHead();
+        let row = thead.insertRow();
+        let th = document.createElement("th");
+        let text = document.createTextNode('name');
+        th.appendChild(text);
+        row.appendChild(th);
     }
+
+    function generateTable(table, data) {
+        let i = 0;
+        for (let element of data) {
+            let row = table.insertRow();
+            let cell = row.insertCell();
+            let text = document.createTextNode(element['name']);
+            row.setAttribute("id", i);
+            cell.appendChild(text);
+            i++;
+        }
+    }
+
+    let table = document.querySelector("table");
+    let datar = Object.keys(teams[0]);
+    generateTableHead(table, datar);
+    generateTable(table, teams);
+
+    /* for (let i = 0; i < teams.length; i++) {
+        d3.select("#dropdown-content").append("a").attr("href", "#").text(teams[i].name);
+    } */
 
     var team = teams[0];
 
-    d3.select("body")
-        .append("div")
-        .attr("id", "team-name");
+    $('#teamsTable tr').hover(function () {
+        $(this).addClass('hover');
+        id = $(this).closest('tr').attr('id');
+        team = teams[id];
+    }, function () {
+        $(this).removeClass('hover');
+        team = teams[0];
+    });
 
+    d3.select('#matchesPieChart').append("div").attr("id", "team-name");
     d3.select("#team-name").html(`Team name: ${team.name}`);
-
     delete team.name;
 
-    var width = 500;
-    var height = 500;
-    var outerRadius = 200;
-    var innerRadius = 50;
+    var width = 450
+    height = 450
+    margin = 40
+    var radius = Math.min(width, height) / 2 - margin
 
-    var color = d3.scaleOrdinal().range(["#98abc5", "#8a89a6", "#7b6888"]);
+    var svg = d3.select("#matchesPieChart")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .append("g")
+        .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
 
-    var arc = d3.arc()
-        .outerRadius(outerRadius);
+    var color = d3.scaleOrdinal()
+        .domain(team)
+        .range(d3.schemeSet2);
 
     var pie = d3.pie()
         .value(function (d) { return d.value; })
     var data_ready = pie(d3.entries(team))
 
+    var arcGenerator = d3.arc()
+        .innerRadius(0)
+        .outerRadius(radius)
 
-    var svg = d3.select("body")
-        .append("svg")
-        .attr("width", width)
-        .attr("height", height);
-
-    var pieArcs = svg.selectAll("g.pie")
+    svg
+        .selectAll('mySlices')
         .data(data_ready)
         .enter()
-        .append("g")
-        .attr("class", "pie")
-        .attr("transform", "translate(" + (width / 2) + ", " + (height / 2) + ")");
+        .append('path')
+        .attr('d', arcGenerator)
+        .attr('fill', function (d) { return (color(d.data.key)) })
+        .attr("stroke", "black")
+        .style("stroke-width", "2px")
+        .style("opacity", 0.7)
 
-    pieArcs.append("path")
-        .attr("d", arc)
-        .attr("fill", function (d) { return color(d.value); });
-
-    pieArcs.append("text")
-        .attr("transform", function (d) {
-            d.outerRadius = outerRadius;
-            d.innerRadius = innerRadius;
-            return "translate(" + arc.centroid(d) + ")";
-        })
-        .attr("text-anchor", "middle")
-        .text(function (d) { return d.value; });
-
-    pieArcs.append("text")
-        .attr("transform", function (d) {
-            d.outerRadius = outerRadius + 50;
-            d.innerRadius = outerRadius + 50;
-            return "translate(" + arc.centroid(d) + ")";
-        })
-        .attr("text-anchor", "middle")
-        .text(function (d, i) { return Object.keys(team)[i]; });
-
-
-
-    console.log(teams);
+    svg
+        .selectAll('mySlices')
+        .data(data_ready)
+        .enter()
+        .append('text')
+        .text(function (d) { return d.data.key + ": " + d.data.value })
+        .attr("transform", function (d) { return "translate(" + arcGenerator.centroid(d) + ")"; })
+        .style("text-anchor", "middle")
+        .style("font-size", 17)
 }
 
 function attendanceHistogram(data) {
@@ -192,9 +274,12 @@ function attendanceHistogram(data) {
     const titleText = 'Attendance per stadium';
     const xAxisLabelText = 'Attendance';
 
-    const svg = d3.select('svg');
-    const width = +svg.attr('width');
-    const height = +svg.attr('height');
+    const width = 960;
+    const height = 500;
+
+    const svg = d3.select("#attendanceHistogram").append("svg")
+        .attr("width", width)
+        .attr("height", height);
 
     const xValue = stadium => stadium.attendance;
     const yValue = stadium => stadium.name;
@@ -230,80 +315,14 @@ function attendanceHistogram(data) {
 
     g.selectAll('rect').data(stadiums)
         .enter().append('rect')
-            .attr('y', stadium => yScale(yValue(stadium)))
-            .attr('width', stadium => xScale(xValue(stadium)))
-            .attr('height', yScale.bandwidth());
-    
+        .attr('y', stadium => yScale(yValue(stadium)))
+        .attr('width', stadium => xScale(xValue(stadium)))
+        .attr('height', yScale.bandwidth());
+
     g.append('text')
         .attr('class', 'title')
         .attr('y', -10)
         .text(titleText);
-
-    /*const titleText = 'Attendance per stadium';
-    const xAxisLabelText = 'Attendance';
-
-    const svg = d3.select('svg');
-
-    const width = 960;
-    const height = 500;
-
-    const render = data => {
-        const xValue = d => d['attendance'];
-        const yValue = d => d.stadium;
-        const margin = { top: 50, right: 40, bottom: 77, left: 180 };
-        const innerWidth = width - margin.left - margin.right;
-        const innerHeight = height - margin.top - margin.bottom;
-
-        const xScale = d3.scaleLinear()
-            .domain([0, d3.max(data, xValue)])
-            .range([0, innerWidth]);
-
-        const yScale = d3.scaleBand()
-            .domain(data.map(yValue))
-            .range([0, innerHeight])
-            .padding(0.1);
-
-        const g = svg.append('g')
-            .attr('transform', `translate(${margin.left},${margin.top})`);
-
-        const xAxisTickFormat = number =>
-            d3.format('.3s')(number)
-                .replace('G', 'B');
-
-        const xAxis = d3.axisBottom(xScale)
-            .tickFormat(xAxisTickFormat)
-            .tickSize(-innerHeight);
-
-        g.append('g')
-            .call(d3.axisLeft(yScale))
-            .selectAll('.domain, .tick line')
-            .remove();
-
-        const xAxisG = g.append('g').call(xAxis)
-            .attr('transform', `translate(0,${innerHeight})`);
-
-        xAxisG.select('.domain').remove();
-
-        xAxisG.append('text')
-            .attr('class', 'axis-label')
-            .attr('y', 65)
-            .attr('x', innerWidth / 2)
-            .attr('fill', 'black')
-            .text(xAxisLabelText);
-
-        g.selectAll('rect').data(data)
-            .enter().append('rect')
-            .attr('y', d => yScale(yValue(d)))
-            .attr('width', d => xScale(xValue(d)))
-            .attr('height', yScale.bandwidth());
-
-        g.append('text')
-            .attr('class', 'title')
-            .attr('y', -10)
-            .text(titleText);
-    };
-
-    render(stadiums);*/
 }
 
 // d3.select("#dropdown-content").append("a").attr("href", "#").text(data[i].Referee);

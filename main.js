@@ -1,125 +1,14 @@
 d3.csv("2018_worldcup_v3.csv", function (data) {
     tournamentBracket(data);
-    //refereesPieChart(data);
-    //matchesPieChart(data);
-    //attendanceHistogram(data);
+    refereesPieChart(data);
+    let teams = generateTeams(data)
+    generateCountriesTable(teams, data)
+    matchesPieChart(data, teams);
+    attendanceHistogram(data);
 });
 
-function tournamentBracket(data) { }
-
-function refereesPieChart(data) {
-    var referees = {};
-
-    for (let i = 0; i < data.length; i++) {
-        referees[data[i].Referee] = (referees[data[i].Referee] + 1) || 1;
-    }
-
-    var otherRefereesCount = 0;
-
-    for (const referee in referees) {
-        if (referees[referee] <= 3) {
-            delete referees[referee];
-            otherRefereesCount++;
-        }
-    }
-
-    referees['Ostali'] = otherRefereesCount;
-
-    var width = 450
-    height = 450
-    margin = 40
-    var radius = Math.min(width, height) / 2 - margin
-
-    var svg = d3.select("#matchesPieChart")
-        .append("svg")
-        .attr("width", width)
-        .attr("height", height)
-        .append("g")
-        .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
-
-    var color = d3.scaleOrdinal()
-        .domain(referees)
-        .range(d3.schemeSet2);
-
-    var pie = d3.pie()
-        .value(function (d) { return d.value; })
-    var data_ready = pie(d3.entries(referees))
-
-    var arcGenerator = d3.arc()
-        .innerRadius(0)
-        .outerRadius(radius)
-
-    svg
-        .selectAll('mySlices')
-        .data(data_ready)
-        .enter()
-        .append('path')
-        .attr('d', arcGenerator)
-        .attr('fill', function (d) { return (color(d.data.key)) })
-        .attr("stroke", "black")
-        .style("stroke-width", "2px")
-        .style("opacity", 0.7)
-
-    svg
-        .selectAll('mySlices')
-        .data(data_ready)
-        .enter()
-        .append('text')
-        .text(function (d) { return d.data.key + ": " + d.data.value })
-        .attr("transform", function (d) { return "translate(" + arcGenerator.centroid(d) + ")"; })
-        .style("text-anchor", "middle")
-        .style("font-size", 17)
-
-    /* var width = 500;
-    var height = 500;
-    var outerRadius = 200;
-    var innerRadius = 50;
-
-    var color = d3.scale.category20();
-
-    var arc = d3.svg.arc()
-        .outerRadius(outerRadius);
-
-    var pie = d3.layout.pie()
-        .value(function (d) { return d.value; })
-    var data_ready = pie(d3.entries(referees))
-
-    var svg = d3.select("body")
-        .append("svg")
-        .attr("width", width)
-        .attr("height", height);
-
-    var pieArcs = svg.selectAll("g.pie")
-        .data(data_ready)
-        .enter()
-        .append("g")
-        .attr("class", "pie")
-        .attr("transform", "translate(" + (width / 2) + ", " + (height / 2) + ")");
-
-    pieArcs.append("path")
-        .attr("fill", function (d, i) { return color(i); })
-        .attr("d", arc);
-
-    pieArcs.append("text")
-        .attr("transform", function (d) {
-            d.outerRadius = outerRadius;
-            d.innerRadius = innerRadius;
-            return "translate(" + arc.centroid(d) + ")";
-        })
-        .attr("text-anchor", "middle")
-        .text(function (d) { return d.value; });
-
-    pieArcs.append("text")
-        .attr("transform", function (d) {
-            d.outerRadius = outerRadius + 50;
-            d.innerRadius = outerRadius + 50;
-            return "translate(" + arc.centroid(d) + ")";
-        })
-        .attr("text-anchor", "middle")
-        .text(function (d, i) { return Object.keys(referees)[i]; }); */
-}
-
-function matchesPieChart(data) {
+function generateTeams(data)
+{
     var teams = [];
 
     for (let i = 0; i < data.length; i++) {
@@ -166,50 +55,242 @@ function matchesPieChart(data) {
 
     );
 
-    function generateTableHead(table, data) {
-        let thead = table.createTHead();
-        let row = thead.insertRow();
-        let th = document.createElement("th");
-        let text = document.createTextNode('name');
-        th.appendChild(text);
-        row.appendChild(th);
+    return teams
+}
+
+function tournamentBracket(data) {
+    var quarterFinals1 = [];
+    var quarterFinals2 = [];
+    var matches = [];
+    var semiFinals = [];
+    var final = {};
+
+    let quarterFinalsCount = 0;
+    let semiFinalsCount = 0;
+
+    for (let i = 0; i < data.length; i++) {
+        if(data[i].Stage == "Quarter-finals") {
+            if(quarterFinalsCount < 2) {
+                quarterFinals1.push({
+                    a: data[i].HomeTeamName,
+                    b: data[i].AwayTeamName,
+                    ascore: data[i].HomeTeamGoals,
+                    bscore: data[i].AwayTeamGoals,
+                    array: 'quarterFinals1',
+                    index: i,
+                    win: data[i].HomeTeamGoals > data[i].AwayTeamGoals ? true : false,
+                });
+            } else {
+                quarterFinals2.push({
+                    a: data[i].HomeTeamName,
+                    b: data[i].AwayTeamName,
+                    ascore: data[i].HomeTeamGoals,
+                    bscore: data[i].AwayTeamGoals,
+                    array: 'quarterFinals2',
+                    index: i,
+                    win: data[i].HomeTeamGoals > data[i].AwayTeamGoals ? true : false,
+                });
+            }
+
+            quarterFinalsCount++;
+        } else if (data[i].Stage == "Semi-finals") {
+            if(semiFinalsCount < 1) {
+                semiFinals.push({
+                    a: data[i].HomeTeamName,
+                    b: data[i].AwayTeamName,
+                    ascore: data[i].HomeTeamGoals,
+                    bscore: data[i].AwayTeamGoals,
+                    array: 'semiFinals',
+                    index: i,
+                    win: data[i].HomeTeamGoals > data[i].AwayTeamGoals ? true : false,
+                    children: quarterFinals1,
+                });
+            } else {
+                semiFinals.push({
+                    a: data[i].HomeTeamName,
+                    b: data[i].AwayTeamName,
+                    ascore: data[i].HomeTeamGoals,
+                    bscore: data[i].AwayTeamGoals,
+                    array: 'semiFinals',
+                    index: i,
+                    win: data[i].HomeTeamGoals > data[i].AwayTeamGoals ? true : false,
+                    children: quarterFinals2,
+                });
+            }
+
+            semiFinalsCount++;
+        } else if(data[i].Stage == "Final") {
+            final = {
+
+                a: data[i].HomeTeamName,
+                b: data[i].AwayTeamName,
+                ascore: data[i].HomeTeamGoals,
+                bscore: data[i].AwayTeamGoals,
+                array: 'final',
+                index: i,
+                win: data[i].HomeTeamGoals > data[i].AwayTeamGoals ? true : false,
+                children: semiFinals,
+            };
+        }
+
+        matches.push(data[i]);
     }
 
-    function generateTable(table, data) {
-        let i = 0;
-        for (let element of data) {
-            let row = table.insertRow();
-            let cell = row.insertCell();
-            let text = document.createTextNode(element['name']);
-            row.setAttribute("id", i);
-            cell.appendChild(text);
-            i++;
+
+    var margin = {top: 40, right: 90, bottom: 50, left: 150},
+    width = 900 - margin.left - margin.right,
+    height = 650 - margin.top - margin.bottom,
+    separationConstant = 1;
+
+    var line = d3.line()
+        .x(d => width - d.y)
+        .y(d => d.x)
+        .curve(d3.curveStep);
+
+    var treemap = d3.tree()
+        .size([height, width])  
+        .separation((a,b) =>a.parent == b.parent ? 1 : separationConstant);
+
+    var nodes = d3.hierarchy(final);
+    nodes = treemap(nodes);
+
+    var svg = d3.select("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom);
+
+    var g = svg.append("g")
+        .attr("transform", "translate(" + margin.left  + "," + margin.top + ")");
+
+    var link = g.selectAll(".link")
+        .data(nodes.descendants().slice(1))
+        .enter().append("path")
+            .attr("class", "link")
+            .attr("d", d => line([d, d.parent ]))
+                .classed("win", d => d.data.win)
+                        
+    function gameTemplate(d) {
+        return '' +
+        "<div data-array = '"+d.data.array+"' data-index = '"+d.data.index+"' class='row" + (d.data.ascore > d.data.bscore ? ' winner' : '') + "'>" +
+            "<span class='cell name'>" + d.data.a + "</span>" + 
+            "<span class='cell score'>" + (d.data.ascore >= 0 ? d.data.ascore : '') + "</span>" +  
+        "</div>" +         
+        "<div class='row" + (d.data.bscore > d.data.ascore ? ' winner' : '') + "'>" +
+            "<span class='cell name'>" + (d.data.b || '') + "</span>" + 
+            "<span class='cell score'>" + (d.data.bscore >= 0 ? d.data.bscore : '') + "</span>" +  
+        "</div>";
+    }
+
+    var labels = d3.select('#labels')
+        .selectAll('div')
+        .data(nodes.descendants())
+        .enter()
+        .append("div")
+            .classed("table", true)
+            .classed("played", d => (d.data.ascore || d.data.bscore)) 
+        .style('left', d => (width - d.y + margin.left - 100) + 'px')
+        .style('top', d => (d.x + (!d.data.b ? 12 : 0) + (!d.data.children ? - 4 : 0) + 10) + 'px')
+        .html(d => gameTemplate(d))
+
+
+    $('.played').mouseenter(function () {
+        $('.match-info').html('')
+        $('.match-info').css('display', 'block')
+        let array = $(this).find('div').attr('data-array')
+        let index = $(this).find('div').attr('data-index')
+        let stats = `<div>${matches[index].HomeTeamName} ${matches[index].HomeTeamGoals} - ${matches[index].AwayTeamGoals} ${matches[index].AwayTeamName}<br>
+                        Date: ${matches[index].Datetime}<br>
+                        Referee: ${matches[index].Referee}<br>
+                        City: ${matches[index].City}<br>
+                        Stadium: ${matches[index].Stadium}<br>
+                        Attendance: ${matches[index].Attendance}</div>`
+        $('.match-info').append(stats)
+    });
+}
+
+function refereesPieChart(data) {
+    var referees = {};
+
+    for (let i = 0; i < data.length; i++) {
+        referees[data[i].Referee] = (referees[data[i].Referee] + 1) || 1;
+    }
+
+    var otherRefereesCount = 0;
+
+    for (const referee in referees) {
+        if (referees[referee] <= 3) {
+            delete referees[referee];
+            otherRefereesCount++;
         }
     }
 
-    let table = document.querySelector("table");
-    let datar = Object.keys(teams[0]);
-    generateTableHead(table, datar);
-    generateTable(table, teams);
+    referees['Ostali'] = otherRefereesCount;
 
-    /* for (let i = 0; i < teams.length; i++) {
-        d3.select("#dropdown-content").append("a").attr("href", "#").text(teams[i].name);
-    } */
+    var width = 450
+    height = 450
+    margin = 40
+    var radius = Math.min(width, height) / 2 - margin
 
-    var team = teams[0];
+    var svg = d3.select("#refereesPieChart")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .append("g")
+        .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
 
-    $('#teamsTable tr').hover(function () {
-        $(this).addClass('hover');
-        id = $(this).closest('tr').attr('id');
-        team = teams[id];
-    }, function () {
-        $(this).removeClass('hover');
-        team = teams[0];
-    });
+    var color = d3.scaleOrdinal()
+        .domain(referees)
+        .range(d3.schemeSet2);
+
+    var pie = d3.pie()
+        .value(function (d) { return d.value; })
+    var data_ready = pie(d3.entries(referees))
+
+    var arcGenerator = d3.arc()
+        .innerRadius(0)
+        .outerRadius(radius)
+
+    var refereesArray = []
+    svg
+        .selectAll('mySlices')
+        .data(data_ready)
+        .enter()
+        .append('path')
+        .attr('d', arcGenerator)
+        .attr('fill', function (d) {
+            refereesArray.push({
+                'key': d.data.key
+            })
+            return (color(d.data.key))
+        })
+        .attr("stroke", "black")
+        .style("stroke-width", "2px")
+        .style("opacity", 0.7)
+
+    svg
+        .selectAll('mySlices')
+        .data(data_ready)
+        .enter()
+        .append('text')
+        .text(function (d) { return d.data.value })
+        .attr("transform", function (d) { return "translate(" + arcGenerator.centroid(d) + ")"; })
+        .style("text-anchor", "middle")
+        .style("font-size", 17)
+
+    d3.select('#refereesPieChart').append("div").attr("id", "topReferees");
+    d3.select("#topReferees").html(`Top 3 referees`);
+
+    let refereesLegend = $('div.referees .legend')
+    for (let referee of refereesArray){
+        let markup = `<div style="display: flex; flex-flow: row nowrap; margin-bottom: 20px;"><div style="background-color: ${color(referee.key)}; width: 20px; height: 20px; margin-right: 10px;"></div>${referee.key}</div>`
+        refereesLegend.append(markup)
+    }
+}
+
+function matchesPieChart(data, teams, id = 0) {
+    let team = teams[id];
 
     d3.select('#matchesPieChart').append("div").attr("id", "team-name");
     d3.select("#team-name").html(`Team name: ${team.name}`);
-    delete team.name;
 
     var width = 450
     height = 450
@@ -230,6 +311,8 @@ function matchesPieChart(data) {
     var pie = d3.pie()
         .value(function (d) { return d.value; })
     var data_ready = pie(d3.entries(team))
+
+    data_ready = data_ready.filter(item => typeof item.data.value === 'number')
 
     var arcGenerator = d3.arc()
         .innerRadius(0)
@@ -325,4 +408,40 @@ function attendanceHistogram(data) {
         .text(titleText);
 }
 
-// d3.select("#dropdown-content").append("a").attr("href", "#").text(data[i].Referee);
+function generateCountriesTable(teams, data)
+{
+    function generateTableHead(table) {
+        let thead = table.createTHead();
+        let row = thead.insertRow();
+        let th = document.createElement("td");
+        th.style.fontWeight = '700'
+        th.style.paddingLeft = '10px'
+        let text = document.createTextNode('Select team');
+        th.appendChild(text);
+        row.appendChild(th);
+    }
+
+    function generateTable(table, data) {
+        let i = 0;
+        let row = table.insertRow();
+        for (let element of data) {
+            if(i % 7 === 0) row = table.insertRow();
+            let cell = row.insertCell();
+            cell.style.padding = '5px 10px';
+            let text = document.createTextNode(element['name']);
+            cell.setAttribute("id", i);
+            cell.appendChild(text);
+            i++;
+        }
+    }
+
+    let table = document.querySelector("table");
+    generateTableHead(table);
+    generateTable(table, teams);
+
+    $('#teamsTable td').click(function () {
+        let id = $(this).closest('td').attr('id');
+        $('#matchesPieChart').html('')
+        matchesPieChart(data, teams, id)
+    });
+}

@@ -3,66 +3,155 @@
   padding: 0;
 }
 
-.dropbtn {
-  background-color: #4CAF50;
-  color: white;
-  padding: 16px;
-  font-size: 16px;
-  border: none;
-  cursor: pointer;
+html {
+  font-family: 'Roboto', sans-serif;
 }
 
-.dropdown {
+.mainTitle {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.treeContainer {
+  display: flex;
+  flex-flow: row wrap;
+}
+
+.refContainer {
+  display: flex;
+  flex-flow: row wrap;
+  padding: 0 30px;
+}
+
+#attendanceHistogram {
+  flex: 1;
+}
+
+.teamsTableContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+}
+
+#matchesPieChart {
   position: relative;
-  display: inline-block;
-  padding: 15px;
+  flex: 1;
+  margin-bottom: 20px;
 }
 
-.dropdown-content {
-  display: none;
-  position: absolute;
-  background-color: #f9f9f9;
-  min-width: 160px;
-  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-  z-index: 1;
+.matchesContainer {
+  display: flex;
+  flex-flow: row wrap;
 }
 
-.dropdown-content a {
-  color: black;
-  padding: 12px 16px;
-  text-decoration: none;
-  display: block;
-}
-
-.dropdown-content a:hover {background-color: #f1f1f1}
-
-.dropdown:hover .dropdown-content {
-  display: block;
-}
-
-.dropdown:hover .dropbtn {
-  background-color: #3e8e41;
+td {
+  margin-right: 10px;
 }
 
 rect {
-  fill: steelblue;
+  fill: #66c2a5;
 }
 
-.hover { background-color:yellow; }
-
-.node circle {
-  cursor: pointer;
-  fill: #fff;
-  stroke: steelblue;
-  stroke-width: 1.5px;
-}
-
-.node text {
-  font: 10px sans-serif;
-}
-
-path.link {
+.link {
   fill: none;
-  stroke: #ccc;
-  stroke-width: 1.5px;
+  stroke: #a0a0a0;
+  stroke-width: 1px;
+}
+
+.win {
+  stroke-width: 3px !important;
+}
+
+#container {
+  position: relative;
+}
+
+#labels .table {
+  position: absolute;
+  background-color: #66c2a5;
+   padding: 5px 7px 3px;
+  line-height: 2;
+  min-width: 185px;
+  box-shadow: 0px 2px 2px 1px rgba(34, 34, 34, 0.1);
+  color: #222222;
+  border: 0px solid rgba(34, 34, 34, 0.1);
+}
+
+#labels .played {
+  --border-width: 0px;
+}
+
+.played:hover {
+  cursor: pointer;
+}
+
+#matchesPieChart {
+  display: flex;
+  flex-flow: column-reverse;
+  justify-content: center;
+  align-items: center;
+}
+
+#labels .row  {
+  display: table-row;
+  }
+
+#labels .cell {
+  padding-left: 10px;
+  display: table-cell;
+  text-transform: uppercase;
+}
+
+.winner {
+  font-weight: bold;
+}
+
+.cell.score {
+  border-left: 1px solid rgba(34, 34, 34, 0.1);
+}
+
+.cell.name {
+  min-width: 140px;
+  padding-right: 10px;
+}
+
+.referees {
+  display: flex;
+  flex-flow: row;
+  flex: 1;
+}
+.referees .legend{
+  display: flex;
+  flex-flow: column;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.match-info-container {
+  margin: 76px 70px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.match-info {
+  display: none;
+  background-color: #66c2a5;
+  min-width: 150px;
+  max-width: 300px;
+  max-height: 200px;
+  padding: 30px 30px;
+  border-radius: 10px;
+}
+table:hover{
+  cursor: pointer;
+}
+
+#refereesPieChart {
+  display: flex;
+  flex-flow: column-reverse;
+  justify-content: center;
+  align-items: center;
 }
